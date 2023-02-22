@@ -4,14 +4,11 @@
 .nfs*
 *.o
 BedReader.cpp
-Fasta.cpp
-Fasta.h
 Makefile.bad
 Multinomial.cpp
 Multinomial.h
 Pilot1
 Pilot2
-VCF.h
 VariantFilter.h
 b.vcf
 bugs/
