@@ -1,8 +1,8 @@
 #include "Variant.h"
 #include "BedReader.h"
-#include "IntervalTree.h"
+#include "intervaltree/IntervalTree.h"
 #include <getopt.h>
-#include "Fasta.h"
+#include "fastahack/Fasta.h"
 #include <algorithm>
 #include <list>
 #include <set>

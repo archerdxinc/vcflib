@@ -243,7 +243,7 @@ void CSmithWatermanGotoh::Align(unsigned int& referenceAl, string& cigarAl, cons
 
     unsigned int BestColumn = 0;
     unsigned int BestRow    = 0;
-    BestScore               = FLOAT_NEGATIVE_INFINITY;
+    float BestScore         = FLOAT_NEGATIVE_INFINITY;
 
     for(unsigned int i = 1, k = queryLen; i < referenceLen; i++, k += queryLen) {
 

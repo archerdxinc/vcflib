@@ -32,8 +32,6 @@ public:
     void EnableEntropyGapPenalty(float enGapOpenPenalty);
     // enables repeat gap extension penalty
     void EnableRepeatGapExtensionPenalty(float rGapExtensionPenalty, float rMaxGapRepeatExtensionPenaltyFactor = 10);
-    // record the best score for external use
-    float BestScore;
 private:
     // creates a simple scoring matrix to align the nucleotides and the ambiguity code N
     void CreateScoringMatrix(void);

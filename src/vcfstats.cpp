@@ -257,15 +257,13 @@ int main(int argc, char** argv) {
             } else {
                 ++biallelics;
             }
-            map<string, vector<VariantAllele> > alternates 
-	      = var.parsedAlternates(includePreviousBaseForIndels,
-				     useMNPs,
-				     useEntropy,
-				     matchScore,
-				     mismatchScore,
-				     gapOpenPenalty,
-				     gapExtendPenalty);
-
+            map<string, vector<VariantAllele> > alternates = var.parsedAlternates(includePreviousBaseForIndels,
+                                                                                  useMNPs,
+                                                                                  useEntropy,
+                                                                                  matchScore,
+                                                                                  mismatchScore,
+                                                                                  gapOpenPenalty,
+                                                                                  gapExtendPenalty);
             map<VariantAllele, vector<string> > uniqueVariants;
 	    
             vector<string> cigars;

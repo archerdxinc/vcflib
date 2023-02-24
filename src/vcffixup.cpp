@@ -43,26 +43,24 @@ int countAlleles(Variant& var) {
 
 int main(int argc, char** argv) {
 
-  if (argc == 1 || ((argc > 1) && strcmp(argv[1], "-h") == 0) || strcmp(argv[1], "--help") == 0) {
+    if (argc != 2) {
         cerr << "usage: " << argv[0] << " <vcf file>" << endl
              << "outputs a VCF stream where AC and NS have been generated for each record using sample genotypes" << endl;
         return 1;
     }
 
+    string filename = argv[1];
+
     VariantCallFile variantFile;
-    if (argc == 1 || ((argc == 2) && strcmp(argv[1], "-") == 0)) {
+    if (filename == "-") {
         variantFile.open(std::cin);
-        if (!variantFile.is_open()) {
-            cerr << "vcffixup: could not open stdin" << endl;
-            return 1;
-        }
     } else {
-        string filename = argv[1];
         variantFile.open(filename);
-        if (!variantFile.is_open()) {
-            cerr << "vcffixup: could not open " << filename << endl;
-            return 1;
-        }
+    }
+
+    if (!variantFile.is_open()) {
+        cerr << "could not open " << filename << endl;
+        return 1;
     }
 
     Variant var(variantFile);
@@ -91,12 +89,12 @@ int main(int argc, char** argv) {
 
         var.info["AC"].clear();
         var.info["AF"].clear();
-        var.info["AN"].clear();
+	var.info["AN"].clear();
 
         int allelecount = countAlleles(var);
-        stringstream an;
-        an << allelecount;
-        var.info["AN"].push_back(an.str());
+	stringstream an;
+	an << allelecount;
+	var.info["AN"].push_back(an.str());
 
         for (vector<string>::iterator a = var.alt.begin(); a != var.alt.end(); ++a) {
             string& allele = *a;

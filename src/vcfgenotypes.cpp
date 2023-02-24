@@ -43,20 +43,15 @@ int main(int argc, char** argv) {
         for (; s != sEnd; ++s) {
             map<string, vector<string> >& sample = s->second;
             string& genotype = sample["GT"].front(); // XXX assumes we can only have one GT value
-            map<int, int> gt = decomposeGenotype(genotype);
+            vector<string> gt = split(genotype, "|/");
+            
             // report the sample and it's genotype
             cout << s->first << ":";
-            vector<string> x;
-            for (map<int, int>::iterator g = gt.begin(); g != gt.end(); ++g) {
-                for (int i = 0; i < g->second; ++i) {
-                    if (g->first == NULL_ALLELE) {
-                        x.push_back(".");
-                    } else {
-                        x.push_back(var.alleles[g->first]);
-                    }
-                }
+            for (vector<string>::iterator g = gt.begin(); g != gt.end(); ++g) {
+                int index = atoi(g->c_str());
+                cout << var.alleles[index];
+                if (g != (gt.end()-1)) cout << "/";
             }
-            cout << join(x, "/");
             cout << "\t";
         }
         cout << endl;

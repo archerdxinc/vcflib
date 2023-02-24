@@ -1,49 +1,71 @@
-
-# Use ?= to allow override from the env or command-line.
-
-CC?=		gcc
-CXX?= 		g++
-CXXFLAGS?=	-g -Wall -O2 -fPIC #-m64 #-arch ppc
-INCLUDES?=	-Ihtslib
-HTS_HEADERS?=	htslib/htslib/bgzf.h htslib/htslib/tbx.h
-HTS_LIB?=	htslib/libhts.a
-LIBPATH?=	-L. -Lhtslib
-
+CC=			gcc
+CPP= 		g++
+CFLAGS=		-g -Wall -O2 -fPIC #-m64 #-arch ppc
 DFLAGS=		-D_FILE_OFFSET_BITS=64 -D_USE_KNETFILE
-PROG=		tabix++
-SUBDIRS=.
+LOBJS=		bgzf.o kstring.o knetfile.o index.o bedidx.o
+AOBJS=		main.o
+PROG=		tabix bgzip tabix++
+INCLUDES=
+SUBDIRS=	.
+LIBPATH=
+LIBCURSES=	
 
 .SUFFIXES:.c .o
 
 .c.o:
-	$(CC) -c $(CXXFLAGS) $(DFLAGS) $(INCLUDES) $< -o $@
+		$(CC) -c $(CFLAGS) $(DFLAGS) $(INCLUDES) $< -o $@
 
 all-recur lib-recur clean-recur cleanlocal-recur install-recur:
-	@target=`echo $@ | sed s/-recur//`; \
-	wdir=`pwd`; \
-	list='$(SUBDIRS)'; for subdir in $$list; do \
-		cd $$subdir; \
-		$(MAKE) CC="$(CC)" DFLAGS="$(DFLAGS)" CXXFLAGS="$(CXXFLAGS)" \
-			INCLUDES="$(INCLUDES)" LIBPATH="$(LIBPATH)" $$target \
-			|| exit 1; \
-		cd $$wdir; \
-	done;
+		@target=`echo $@ | sed s/-recur//`; \
+		wdir=`pwd`; \
+		list='$(SUBDIRS)'; for subdir in $$list; do \
+			cd $$subdir; \
+			$(MAKE) CC="$(CC)" DFLAGS="$(DFLAGS)" CFLAGS="$(CFLAGS)" \
+				INCLUDES="$(INCLUDES)" LIBPATH="$(LIBPATH)" $$target || exit 1; \
+			cd $$wdir; \
+		done;
 
-all:	$(PROG)
+all:$(PROG)
 
-tabix.o: $(HTS_HEADERS) tabix.cpp tabix.hpp
-	$(CXX) $(CXXFLAGS) -c tabix.cpp $(INCLUDES)
+lib:libtabix.a
 
-htslib/libhts.a:
-	cd htslib && $(MAKE) lib-static
+libtabix.so.1:$(LOBJS)
+		$(CC) -shared -Wl,-soname,libtabix.so -o $@ $(LOBJS) -lc -lz
 
-tabix++: tabix.o main.cpp $(HTS_LIB)
-	$(CXX) $(CXXFLAGS) -o $@ main.cpp tabix.o $(INCLUDES) $(LIBPATH) \
-		-lhts -lpthread -lm -lz
+libtabix.1.dylib:$(LOBJS)
+		libtool -dynamic $(LOBJS) -o $@ -lc -lz
+
+libtabix.a:$(LOBJS)
+		$(AR) -cru $@ $(LOBJS)
+		ranlib $@
+
+tabix:lib $(AOBJS)
+		$(CC) $(CFLAGS) -o $@ $(AOBJS) -lm $(LIBPATH) -L. -ltabix -lz
+
+tabix.o: tabix.hpp tabix.cpp
+		$(CPP) $(CFLAGS) -c tabix.cpp
+
+tabix++:lib tabix.o main.cpp
+		$(CPP) $(CFLAGS) -o $@ main.cpp tabix.o bgzf.o -lm $(LIBPATH) -L. -ltabix -lz
+
+bgzip:bgzip.o bgzf.o knetfile.o
+		$(CC) $(CFLAGS) -o $@ bgzip.o bgzf.o knetfile.o -lz
+
+TabixReader.class:TabixReader.java
+		javac -cp .:sam.jar TabixReader.java
+
+kstring.o:kstring.h
+knetfile.o:knetfile.h
+bgzf.o:bgzf.h knetfile.h
+index.o:bgzf.h tabix.h khash.h ksort.h kstring.h
+main.o:tabix.h kstring.h bgzf.h
+bgzip.o:bgzf.h
+bedidx.o:kseq.h khash.h
+
+tabix.pdf:tabix.tex
+		pdflatex tabix.tex
 
 cleanlocal:
-	rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log \
-		tabix.pdf *.class libtabix.*.dylib libtabix.so*
-	cd htslib && $(MAKE) clean
+		rm -fr gmon.out *.o a.out *.dSYM $(PROG) *~ *.a tabix.aux tabix.log tabix.pdf *.class libtabix.*.dylib libtabix.so*
 
 clean:cleanlocal-recur

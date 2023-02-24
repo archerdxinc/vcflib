@@ -2,7 +2,7 @@
 #include "convert.h"
 #include "join.h"
 #include "split.h"
-#include "Fasta.h"
+#include "fastahack/Fasta.h"
 #include <set>
 #include <vector>
 #include <getopt.h>

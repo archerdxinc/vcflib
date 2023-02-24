@@ -2595,4 +2595,4 @@ vector<Variant*> Variant::matchingHaplotypes() {
         }
     }
 
-} // end namespace vcf
+} // end namespace vcflib

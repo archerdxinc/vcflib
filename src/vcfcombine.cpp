@@ -1,7 +1,6 @@
 #include "Variant.h"
 #include <getopt.h>
-#include <utility>
-#include "gpatInfo.hpp"
+
 
 using namespace std;
 using namespace vcflib;
@@ -17,8 +16,7 @@ void printSummary(char** argv) {
          << endl
          << "options:" << endl
          << "    -h --help           This text." << endl
-	 << "    -v --version        Print version." << endl
-	 << "    -r --region REGION  A region specifier of the form chrN:x-y to bound the merge" << endl;
+         << "    -r --region REGION  A region specifier of the form chrN:x-y to bound the merge" << endl;
     exit(1);
 }
 
@@ -36,42 +34,34 @@ int main(int argc, char** argv) {
         {
             /* These options set a flag. */
             //{"verbose", no_argument,       &verbose_flag, 1},
-            {"help"   , no_argument      , 0, 'h'},
-	    {"version", no_argument      , 0, 'v'},
-            {"region" , required_argument, 0, 'r'},
+            {"help", no_argument, 0, 'h'},
+            {"region", required_argument, 0, 'r'},
             {0, 0, 0, 0}
         };
         /* getopt_long stores the option index here. */
         int option_index = 0;
 
-        c = getopt_long (argc, argv, "vhr:",
+        c = getopt_long (argc, argv, "hr:",
                          long_options, &option_index);
 
         if (c == -1)
             break;
 
         switch (c) {
-	case 'v':
-	  {
-	    printBasicVersion();
-	    exit(0);
-	  }
+
         case 'h':
-	  {
             printSummary(argv);
             break;
-	  }
+
         case 'r':
-	  {
             region = optarg;
             break;
-	  }
+            
         case '?':
-	  {
             printSummary(argv);
             exit(1);
             break;
-	  }
+                
         default:
             abort ();
         }
@@ -84,7 +74,7 @@ int main(int argc, char** argv) {
     // structure to track ordered variants
     //ChromNameCompare chromCompare;
 
-    typedef
+    typedef 
         map<vector<string>, // alts
             map<VariantCallFile*, Variant*> >
         Position;
@@ -102,15 +92,10 @@ int main(int argc, char** argv) {
     VariantsByChromPosAltFile  variantsByChromPosAltFile;
 
     VariantCallFile* firstVCF = NULL;
-    VCFHeader vcf_header;
     for (int i = optind; i != argc; ++i) {
         string inputFilename = argv[i];
         vcf = new VariantCallFile;
         vcf->open(inputFilename);
-        if (!vcf->is_open()) {
-            cerr << "could not open \"" << inputFilename << "\" exiting" << endl;
-            return 1;
-        }
         if (!region.empty()) {
             if (!vcf->setRegion(region)) {
                 cerr << "could not set region on " << inputFilename << endl;
@@ -125,30 +110,6 @@ int main(int argc, char** argv) {
                 sampleNames.insert(sampleNames.end(), vcf->sampleNames.begin(), vcf->sampleNames.end());
                 // the first file is tracked for header generation
             }
-            // populate the vcf_header with header_lines from this vcf file
-            vector<string> header_lines = split(vcf->vcf_header, "\n");
-            if (header_lines.size() > 0)
-            {
-                // populate the meta information lines
-                string column_headers_line;
-                for (vector<string>::const_iterator meta_iter = header_lines.begin(); meta_iter != header_lines.end(); ++meta_iter)
-                {
-                    vcf_header.addMetaInformationLine(*meta_iter);
-                    if ((*meta_iter).find("#CHROM") != string::npos) // store the header column position
-                    {
-                        column_headers_line = (*meta_iter);
-                    }
-                }
-                if (column_headers_line.size() > 0) // if there are header columns then add them
-                {
-                    vector<string> header_columns = split(column_headers_line, "\t");
-                    for (vector<string>::const_iterator column_iter = header_columns.begin(); column_iter != header_columns.end(); ++column_iter)
-                    {
-                        vcf_header.addHeaderColumn(*column_iter);
-                    }
-                }
-            }
-
             if (firstVCF == NULL) firstVCF = vcf;
         }
     }
@@ -159,9 +120,7 @@ int main(int argc, char** argv) {
 
     // now that we've accumulated the sample information we can generate the combined header
     VariantCallFile outputCallFile;
-//    string header = firstVCF->headerWithSampleNames(sampleNames);
-    string header = vcf_header.getHeaderString();
-
+    string header = firstVCF->headerWithSampleNames(sampleNames);
     outputCallFile.openForOutput(header);
 
     cout << outputCallFile.header << endl;
@@ -176,7 +135,7 @@ int main(int argc, char** argv) {
             variantsByChromPosAltFile.erase(variantsByChromPosAltFile.begin());
             continue;
         }
-
+        
         Position& pos = chrom.begin()->second;
         Position::iterator s = pos.begin();
         for ( ; s != pos.end(); ++s) {

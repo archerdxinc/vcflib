@@ -55,34 +55,17 @@ void annotateWithGenotypes(Variant& varA, Variant& varB, string& annotationTag) 
             map<string, vector<string> >& other = o->second;
             string& otherGenotype = other["GT"].front();
             // XXX this must compare the genotypes in the two files
-           
-            if (otherGenotype.find("|") != string::npos) {
-              vector<int> gtB = decomposePhasedGenotype(otherGenotype);
-              vector<int> gtnew;
-              gtnew.reserve(gtB.size());
-
-              for (vector<int>::iterator g = gtB.begin(); g != gtB.end(); ++g) {
-                map<int, int>::iterator f = varBconvertToVarA.find(*g);
-                if (f != varBconvertToVarA.end()) {
-                  gtnew.push_back(*g);
-                } else {
-                  gtnew.push_back(NULL_ALLELE);
-                }
-              }
-              sample[annotationTag].push_back(phasedGenotypeToString(gtnew));
-            } else {
-              map<int, int> gtB = decomposeGenotype(otherGenotype);
-              map<int, int> gtnew;
-              for (map<int, int>::iterator g = gtB.begin(); g != gtB.end(); ++g) {
+            map<int, int> gtB = decomposeGenotype(otherGenotype);
+            map<int, int> gtnew;
+            for (map<int, int>::iterator g = gtB.begin(); g != gtB.end(); ++g) {
                 map<int, int>::iterator f = varBconvertToVarA.find(g->first);
                 if (f != varBconvertToVarA.end()) {
-                  gtnew[f->second] += g->second;
+                    gtnew[f->second] += g->second;
                 } else {
-                  gtnew[NULL_ALLELE] += g->second;
+                    gtnew[-1] += g->second;
                 }
-              }
-              sample[annotationTag].push_back(genotypeToString(gtnew));
             }
+            sample[annotationTag].push_back(genotypeToString(gtnew));
         }
     }
 }
@@ -148,23 +131,17 @@ int main(int argc, char** argv) {
     do {
 
         // this is broken.  to do it right, it'll be necessary to get reference ids from the fasta reference used to make the alignments...
-		// if B is NOT done, and is less than A, read new B.
         if (!variantFileB.done()
             && (varB.sequenceName != varA.sequenceName
-                || (varB.sequenceName == varA.sequenceName && varB.position < varA.position)
-				|| variantFileA.done())
+                || (varB.sequenceName == varA.sequenceName && varB.position < varA.position))
             ) {
             variantFileB.getNextVariant(varB);
         }
 
-		// if A is not done- and A is less than B, read A.  
-		// should also read if variant B is done. 
         if (!variantFileA.done()
             && (varA.sequenceName != varB.sequenceName
-                || (varA.sequenceName == varB.sequenceName && varA.position < varB.position)
-				|| variantFileB.done())
+                || (varA.sequenceName == varB.sequenceName && varA.position < varB.position))
             ) {
-            annotateWithBlankGenotypes(varA, annotag);
             cout << varA << endl;
             variantFileA.getNextVariant(varA);
         }
@@ -210,33 +187,27 @@ int main(int argc, char** argv) {
 	    
             for (map<pair<string, string>, Variant>::iterator vs = varsAParsed.begin(); vs != varsAParsed.end(); ++vs) {
                 Variant& varA = vs->second;
-                annotateWithBlankGenotypes(varA, annotag);
                 if (varsBParsed.find(make_pair(varA.ref, varA.alt.front())) != varsBParsed.end()) {
                     Variant& varB = varsBParsed[make_pair(varA.ref, varA.alt.front())]; // TODO cleanup
                     annotateWithGenotypes(varA, varB, annotag);
                     varA.infoFlags[annotag + ".has_variant"] = true;
+                } else {
+                    annotateWithBlankGenotypes(varA, annotag);
                 }
                 cout << varA << endl;
             }
 
         } else if (!varsA.empty() && !varsB.empty()) { // one line per multi-allelic
             Variant& varA = varsA.front();
-            annotateWithBlankGenotypes(varA, annotag);
             Variant& varB = varsB.front();
             annotateWithGenotypes(varA, varB, annotag);
             // XXX TODO, and also allow for records with multiple alts
             // XXX assume that if the other file has a corresponding record, some kind of variation was detected at the same site
             varA.infoFlags[annotag + ".has_variant"] = true;
             cout << varA << endl;
-        } else {
-            for (vector<Variant>::iterator v = varsA.begin(); v != varsA.end(); ++v) {
-                Variant& varA = *v;
-                annotateWithBlankGenotypes(varA, annotag);
-                cout << varA << endl;
-            }
         }
-
-    } while (!variantFileA.done() || !variantFileB.done());
+        
+    } while (!variantFileA.done() && !variantFileB.done());
 
     return 0;
 

@@ -9,11 +9,11 @@
 #include "Fasta.h"
 
 FastaIndexEntry::FastaIndexEntry(string name, int length, long long offset, int line_blen, int line_len)
-        : name(name)
-        , length(length)
-        , offset(offset)
-        , line_blen(line_blen)
-        , line_len(line_len)
+    : name(name)
+    , length(length)
+    , offset(offset)
+    , line_blen(line_blen)
+    , line_len(line_len)
 {}
 
 FastaIndexEntry::FastaIndexEntry(void) // empty constructor
@@ -27,7 +27,7 @@ void FastaIndexEntry::clear(void)
     name = "";
     length = 0;
     offset = -1;  // no real offset will ever be below 0, so this allows us to
-    // check if we have already recorded a real offset
+                  // check if we have already recorded a real offset
     line_blen = 0;
     line_len = 0;
 }
@@ -35,11 +35,11 @@ void FastaIndexEntry::clear(void)
 ostream& operator<<(ostream& output, const FastaIndexEntry& e) {
     // just write the first component of the name, for compliance with other tools
     output << split(e.name, ' ').at(0) << "\t" << e.length << "\t" << e.offset << "\t" <<
-           e.line_blen << "\t" << e.line_len;
+        e.line_blen << "\t" << e.line_len;
     return output;  // for multiple << operators.
 }
 
-FastaIndex::FastaIndex(void)
+FastaIndex::FastaIndex(void) 
 {}
 
 void FastaIndex::readIndexFile(string fname) {
@@ -58,12 +58,12 @@ void FastaIndex::readIndexFile(string fname) {
                 string name = split(fields[0], " \t").at(0);  // key by first token of name
                 sequenceNames.push_back(name);
                 this->insert(make_pair(name, FastaIndexEntry(fields[0], atoi(fields[1].c_str()),
-                                                             strtoll(fields[2].c_str(), &end, 10),
-                                                             atoi(fields[3].c_str()),
-                                                             atoi(fields[4].c_str()))));
+                                                    strtoll(fields[2].c_str(), &end, 10),
+                                                    atoi(fields[3].c_str()),
+                                                    atoi(fields[4].c_str()))));
             } else {
-                cerr << "Warning: malformed fasta index file " << fname <<
-                     "does not have enough fields @ line " << linenum << endl;
+                cerr << "Warning: malformed fasta index file " << fname << 
+                    "does not have enough fields @ line " << linenum << endl;
                 cerr << line << endl;
                 exit(1);
             }
@@ -103,12 +103,12 @@ void FastaIndex::indexReference(string refname) {
     long long offset = 0;  // byte offset from start of file
     long long line_number = 0; // current line number
     bool mismatchedLineLengths = false; // flag to indicate if our line length changes mid-file
-    // this will be used to raise an error
-    // if we have a line length change at
-    // any line other than the last line in
-    // the sequence
+                                        // this will be used to raise an error
+                                        // if we have a line length change at
+                                        // any line other than the last line in
+                                        // the sequence
     bool emptyLine = false;  // flag to catch empty lines, which we allow for
-    // index generation only on the last line of the sequence
+                             // index generation only on the last line of the sequence
     ifstream refFile;
     refFile.open(refname.c_str());
     if (refFile.is_open()) {
@@ -150,7 +150,7 @@ void FastaIndex::indexReference(string refname) {
                                 cerr << "ERROR: mismatched line lengths";
                             }
                             cerr << " at line " << line_number << " within sequence " << entry.name <<
-                                 endl << "File not suitable for fasta index generation." << endl;
+                                endl << "File not suitable for fasta index generation." << endl;
                             exit(1);
                         }
                     }
@@ -183,18 +183,18 @@ void FastaIndex::flushEntryToIndex(FastaIndexEntry& entry) {
     string name = split(entry.name, " \t").at(0);  // key by first token of name
     sequenceNames.push_back(name);
     this->insert(make_pair(name, FastaIndexEntry(entry.name, entry.length,
-                                                 entry.offset, entry.line_blen,
-                                                 entry.line_len)));
+                        entry.offset, entry.line_blen,
+                        entry.line_len)));
 
 }
 
 void FastaIndex::writeIndexFile(string fname) {
     //cerr << "writing fasta index file " << fname << endl;
     ofstream file;
-    file.open(fname.c_str());
+    file.open(fname.c_str()); 
     if (file.is_open()) {
         file << *this;
-    } else {
+    } else { 
         cerr << "could not open index file " << fname << " for writing!" << endl;
         exit(1);
     }
@@ -228,10 +228,10 @@ void FastaReference::open(string reffilename) {
         exit(1);
     }
     index = new FastaIndex();
-    struct stat stFileInfo;
-    string indexFileName = filename + index->indexFileExtension();
+    struct stat stFileInfo; 
+    string indexFileName = filename + index->indexFileExtension(); 
     // if we can find an index file, use it
-    if(stat(indexFileName.c_str(), &stFileInfo) == 0) {
+    if(stat(indexFileName.c_str(), &stFileInfo) == 0) { 
         index->readIndexFile(indexFileName);
     } else { // otherwise, read the reference and generate the index file in the cwd
         cerr << "index file " << indexFileName << " not found, generating..." << endl;
@@ -314,3 +314,4 @@ long unsigned int FastaReference::sequenceLength(string seqname) {
     FastaIndexEntry entry = index->entry(seqname);
     return entry.length;
 }
+

@@ -8,19 +8,11 @@ using namespace vcflib;
 
 int main(int argc, char** argv) {
 
-    string tag;
     if (argc > 1) {
-        tag = argv[1];
-        if (tag == "--help" || tag == "-h") {
-            cerr << "usage: " << argv[0] << " [customtagname] < [vcf file]" << endl
-                 << "adds a tag to each variant record which indicates the distance" << endl
-                 << "to the nearest variant." << endl
-                 << "(defaults to BasesToClosestVariant if no custom tag name is given." << endl;
-            return 1;
-        }
-    } else {
-        /* use default */
-        tag = "BasesToClosestVariant";
+        cerr << "usage: " << argv[0] << " <[vcf file]" << endl
+             << "adds a tag (BasesToNextVariant) to each variant record which indicates" << endl
+             << "the distance to the nearest variant" << endl;
+        return 1;
     }
 
     VariantCallFile variantFile;
@@ -38,59 +30,53 @@ int main(int argc, char** argv) {
     vars.push_back(&varA);
     vars.push_back(&varB);
     vars.push_back(&varC);
-
+    
     for (vector<Variant*>::iterator v = vars.begin(); v != vars.end(); ++v) {
         variantFile.getNextVariant(**v);
     }
 
+    string tag = "BasesToClosestVariant";
     string line = "##INFO=<ID=" + tag + ",Number=1,Type=Integer,Description=\"" \
         + "Number of bases to the closest variant in the file.\">";
     variantFile.addHeaderLine(line);
 
     cout << variantFile.header << endl;
 
-    if (!vars.at(0)->sequenceName.empty()) {
-        if (!vars.at(1)->sequenceName.empty()) {
-            // at least two variants, so calculate the first distance
-            if (vars.at(0)->sequenceName == vars.at(1)->sequenceName) {
-                vars.at(0)->info[tag].push_back(convert(vars.at(1)->position - vars.at(0)->position));
-            }
-            cout << *vars.at(0) << endl;
+    // get the first distances
+    if (vars.at(0)->sequenceName == vars.at(1)->sequenceName) {
+        vars.at(0)->info[tag].push_back(convert(vars.at(1)->position - vars.at(0)->position));
+    }
 
-            if (!vars.at(2)->sequenceName.empty()) {
-                // at least three variants, so starting with the first three,
-                // calculate the middle variant's closest distance, and then
-                // slide the window forward one.
-                do {
-                    if (vars.at(1)->sequenceName == vars.at(0)->sequenceName &&
-                        vars.at(1)->sequenceName == vars.at(2)->sequenceName) {
-                        vars.at(1)->info[tag].push_back(convert(min(vars.at(1)->position - vars.at(0)->position,
-                                                                    vars.at(2)->position - vars.at(1)->position)));
-                    } else if (vars.at(1)->sequenceName == vars.at(0)->sequenceName) {
-                        vars.at(1)->info[tag].push_back(convert(vars.at(1)->position - vars.at(0)->position));
-                    } else if (vars.at(2)->sequenceName == vars.at(1)->sequenceName) {
-                        vars.at(1)->info[tag].push_back(convert(vars.at(2)->position - vars.at(1)->position));
-                    } else {
-                        // don't add the tag
-                    }
-                    cout << *vars.at(1) << endl;
-                    // rotate
-                    Variant* v = vars.at(0);
-                    vars.at(0) = vars.at(1);
-                    vars.at(1) = vars.at(2);
-                    vars.at(2) = v;
-                } while (variantFile.getNextVariant(*vars.back()));
-            }
+    while (variantFile.getNextVariant(*vars.back())) {
 
-            // assign the last distance and output the last variant
-            if (vars.at(0)->sequenceName == vars.at(1)->sequenceName) {
-                vars.at(1)->info[tag].push_back(convert(vars.at(1)->position - vars.at(0)->position));
-            }
-            cout << *vars.at(1) << endl;
+        if (vars.at(1)->sequenceName == vars.at(0)->sequenceName &&
+            vars.at(1)->sequenceName == vars.at(2)->sequenceName) {
+            vars.at(1)->info[tag].push_back(convert(min(vars.at(1)->position - vars.at(0)->position,
+                                                        vars.at(2)->position - vars.at(1)->position)));
+        } else if (vars.at(1)->sequenceName == vars.at(0)->sequenceName) {
+            vars.at(1)->info[tag].push_back(convert(vars.at(1)->position - vars.at(0)->position));
+        } else if (vars.at(2)->sequenceName == vars.at(1)->sequenceName) {
+            vars.at(1)->info[tag].push_back(convert(vars.at(2)->position - vars.at(1)->position));
         } else {
-            // output the lone variant line untouched
-            cout << *vars.at(0) << endl;
+            // don't add the tag
         }
+        cout << *vars.front() << endl;
+        // rotate
+        Variant* v = vars.at(0);
+        vars.at(0) = vars.at(1);
+        vars.at(1) = vars.at(2);
+        vars.at(2) = v;
+
+    }
+
+    // assign the last distances
+    
+    if (vars.at(0)->sequenceName == vars.at(1)->sequenceName) {
+        vars.at(0)->info[tag].push_back(convert(vars.at(1)->position - vars.at(0)->position));
+        cout << *vars.at(0) << endl;
+	
+        vars.at(1)->info[tag].push_back(convert(vars.at(1)->position - vars.at(0)->position));
+        cout << *vars.at(1) << endl;
     }
 
     return 0;

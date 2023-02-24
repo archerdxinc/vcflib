@@ -471,4 +471,4 @@ void Aligner::ClearMatrices(void) {
   translation_matrix_ = NULL;
 }
 } // namespace StripedSmithWaterman
-} // namespace vcflib
+} // namespace vcfliblib

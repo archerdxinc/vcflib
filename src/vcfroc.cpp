@@ -1,8 +1,8 @@
 #include "Variant.h"
 #include "BedReader.h"
-#include "IntervalTree.h"
+#include "intervaltree/IntervalTree.h"
 #include <getopt.h>
-#include "Fasta.h"
+#include "fastahack/Fasta.h"
 #include <algorithm>
 #include <list>
 #include <set>
@@ -244,7 +244,7 @@ int main(int argc, char** argv) {
     //vcfintersect -r $reference -v -i $answers_primitives $results.$Q.vcf | vcfstats >false_positives.$Q.stats
 
     for (list<Variant>::iterator v = testVariants.begin(); v != testVariants.end(); ++v) {
-        // TODO allow different cutoff sources
+        // TODO allow different cutoffs
         callsByCutoff[v->quality].push_back(&*v);
     }
 

@@ -186,10 +186,8 @@ int main(int argc, char** argv) {
 
     }
 
-    if (!vars.empty()) {
-        Variant result = createMultiallelic(vars);
-        cout << result << endl;
-    }
+    Variant result = createMultiallelic(vars);
+    cout << result << endl;
 
     return 0;
 

@@ -14,11 +14,9 @@ template<class S, class T>
 std::string join(std::vector<T>& elems, S& delim) {
     std::stringstream ss;
     typename std::vector<T>::iterator e = elems.begin();
-    if (e != elems.end()) {
-        ss << *e++;
-        for (; e != elems.end(); ++e) {
-            ss << delim << *e;
-        }
+    ss << *e++;
+    for (; e != elems.end(); ++e) {
+        ss << delim << *e;
     }
     return ss.str();
 }
@@ -28,11 +26,9 @@ template<class S, class T>
 std::string join(std::list<T>& elems, S& delim) {
     std::stringstream ss;
     typename std::list<T>::iterator e = elems.begin();
-    if (e != elems.end()) {
-        ss << *e++;
-        for (; e != elems.end(); ++e) {
-            ss << delim << *e;
-        }
+    ss << *e++;
+    for (; e != elems.end(); ++e) {
+        ss << delim << *e;
     }
     return ss.str();
 }

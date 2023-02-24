@@ -17,15 +17,15 @@
 #include <cstdio>
 #include "split.h"
 #include "join.h"
-#include "tabix.hpp"
-#include "SmithWatermanGotoh.h"
-#include "disorder.h"
+#include "tabixpp/tabix.hpp"
+#include "smithwaterman/SmithWatermanGotoh.h"
+#include "smithwaterman/disorder.h"
 #include "ssw_cpp.hpp"
 #include "convert.h"
-#include "multichoose.h"
-#include "Fasta.h"
+#include "multichoose/multichoose.h"
+#include "fastahack/Fasta.h"
 extern "C" {
-    #include "filevercmp.h"
+    #include "filevercmp/filevercmp.h"
 }
 
 using namespace std;
